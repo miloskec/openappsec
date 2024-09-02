@@ -1,0 +1,45 @@
+services:
+    open-appsec-agent:
+        image: ghcr.io/openappsec/agent:latest
+        container_name: open-appsec-agent
+        ipc: host
+        environment:
+          - registered_server=NGINX Server
+          - user_email= '${USER_EMAIL}'
+          #- https_proxy= '${PROXY_URL_FOR_AGENT}'
+          - autoPolicyLoad=true
+          #- AGENT_TOKEN='${AGENT_TOKEN}'
+        volumes:
+            - './agent/config:/etc/cp/conf'
+            - './agent/data:/etc/cp/data'
+            - './agent/logs:/var/log/nano_agent'
+            - './local-configuration-files:/ext/appsec'
+            - './update-policy.sh:/update-policy.sh'
+        entrypoint: ["/bin/sh", "-c", "chmod +x /update-policy.sh && /update-policy.sh & /cp-nano-agent"]
+        healthcheck:
+          test: ["CMD-SHELL", "open-appsec-ctl --status --extended | grep 'Status: Running'"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
+        tty: true
+        stdin_open: true
+        networks:
+            - sail
+    open-appsec-nginx:
+        image: ghcr.io/openappsec/nginx-attachment:latest
+        container_name: open-appsec-nginx
+        ipc: host
+        ports:
+          - '${APP_PORT:-80}:80'
+        environment:
+          - BACKEND_URL=${BACKEND_URL}
+        volumes:
+          - ./start-nginx.sh:/docker-entrypoint.d/start-nginx.sh
+          - ./nginx.conf.template:/etc/nginx/nginx.conf.template
+        entrypoint: ["/bin/sh", "-c", "chmod +x /docker-entrypoint.d/start-nginx.sh && /docker-entrypoint.d/start-nginx.sh"]
+        networks:
+          - sail
+networks:
+    sail:
+        external: true
+        driver: bridge
