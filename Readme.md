@@ -8,7 +8,7 @@ open-appsec provides pre-emptive threat protection against OWASP Top-10 and zero
 
 It can be deployed as an add-on to Kubernetes Ingress Controller, NGINX, and Kong API Gateway (Envoy support is coming soon) on many platforms and solutions.
 
-The project GitHub is available [here](https://docs.openappsec.io/).
+The project GitHub is available [here](https://github.com/openappsec).
 
 ## Main Features of open-appsec
 
