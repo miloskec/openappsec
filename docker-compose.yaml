@@ -27,6 +27,8 @@ services:
             - sail
     open-appsec-nginx:
         image: ghcr.io/openappsec/nginx-attachment:latest
+        depends_on:
+            - open-appsec-agent
         container_name: open-appsec-nginx
         ipc: host
         ports:
