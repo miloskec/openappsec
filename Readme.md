@@ -51,5 +51,5 @@ The project GitHub is available [here](https://docs.openappsec.io/).
 
 
 ## UML Diagram
-![Open AppSec ](https://github.com/miloskec/.png)
+![Open AppSec ](https://github.com/miloskec/openappsec/blob/master/opanappsec.png)
 
