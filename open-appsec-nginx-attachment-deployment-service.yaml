@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-appsec-nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-appsec-nginx
+  template:
+    metadata:
+      labels:
+        app: open-appsec-nginx
+    spec:
+      containers:
+      - name: open-appsec-nginx
+        image: ghcr.io/openappsec/nginx-attachment:latest
+        env:
+        - name: BACKEND_URL
+          value: "http://gateway-service.default.svc.cluster.local"
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: start-nginx
+          mountPath: /docker-entrypoint.d/start-nginx.sh
+          subPath: start-nginx.sh
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf.template
+          subPath: nginx.conf.template
+        command: ["/bin/sh", "-c", "chmod +x /docker-entrypoint.d/start-nginx.sh && /docker-entrypoint.d/start-nginx.sh"]
+      volumes:
+      - name: start-nginx
+        persistentVolumeClaim:
+          claimName: pvc-start-nginx
+      - name: nginx-config
+        persistentVolumeClaim:
+          claimName: pvc-nginx-config
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-start-nginx
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/start-nginx
+    type: FileOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-start-nginx
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nginx-config
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/nginx-config
+    type: FileOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-nginx-config
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-appsec-nginx-service
+spec:
+  selector:
+    app: open-appsec-nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer

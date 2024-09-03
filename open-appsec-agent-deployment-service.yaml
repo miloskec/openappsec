@@ -1,0 +1,199 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-agent-config
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/agent/config
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-agent-config
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-agent-data
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/agent/data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-agent-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-agent-logs
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/agent/logs
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-agent-logs
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-local-config
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/local-configuration-files
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-local-config
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-update-policy
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/update-policy
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-update-policy
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-appsec-agent-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-appsec-agent
+  template:
+    metadata:
+      labels:
+        app: open-appsec-agent
+    spec:
+      containers:
+      - name: open-appsec-agent
+        image: ghcr.io/openappsec/agent:latest
+        env:
+        - name: registered_server
+          value: "NGINX Server"
+        - name: user_email
+          value: "milos.kecman@gmail.com"
+        - name: autoPolicyLoad
+          value: "true"
+        volumeMounts:
+        - name: agent-config
+          mountPath: /etc/cp/conf
+        - name: agent-data
+          mountPath: /etc/cp/data
+        - name: agent-logs
+          mountPath: /var/log/nano_agent
+        - name: local-config
+          mountPath: /ext/appsec
+        - name: update-policy
+          mountPath: /update-policy.sh
+          subPath: update-policy.sh
+        command: ["/bin/sh", "-c", "chmod +x /update-policy.sh && /update-policy.sh & /cp-nano-agent"]
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "open-appsec-ctl --status --extended | grep 'Status: Running'"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: agent-config
+        persistentVolumeClaim:
+          claimName: pvc-agent-config
+      - name: agent-data
+        persistentVolumeClaim:
+          claimName: pvc-agent-data
+      - name: agent-logs
+        persistentVolumeClaim:
+          claimName: pvc-agent-logs
+      - name: local-config
+        persistentVolumeClaim:
+          claimName: pvc-local-config
+      - name: update-policy
+        persistentVolumeClaim:
+          claimName: pvc-update-policy
+---
