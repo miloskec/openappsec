@@ -170,7 +170,7 @@ spec:
           mountPath: /update-policy.sh
           subPath: update-policy.sh
         command: ["/bin/sh", "-c", "chmod +x /update-policy.sh && /update-policy.sh & /cp-nano-agent"]
-        livenessProbe:
+        readinessProbe:
           exec:
             command:
             - /bin/sh
