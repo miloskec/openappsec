@@ -1,6 +1,7 @@
 #!/bin/sh
 
 POLICY_PATH="/ext/appsec/local-policy.yaml"
+TARGET_PATH="/etc/cp/policy/local_policy.yaml"
 COMMAND_PATH="/usr/sbin/open-appsec-ctl"
 
 # Wait until the open-appsec-ctl command becomes available
@@ -24,6 +25,10 @@ while ! pgrep -f "cp-nano-agent" > /dev/null; do
     echo "Waiting for cp-nano-agent process to start..."
     sleep 5
 done
+
+# Copy the policy file to the target path
+cp "$POLICY_PATH" "$TARGET_PATH"
+echo "Policy file copied to $TARGET_PATH."
 
 echo "cp-nano-agent process is running. Applying policy..."
 
