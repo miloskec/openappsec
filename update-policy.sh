@@ -26,6 +26,13 @@ while ! pgrep -f "cp-nano-agent" > /dev/null; do
     sleep 5
 done
 
+if [ ! -d "/etc/cp/policy" ]; then
+    echo "Directory /etc/cp/policy does not exist. Creating it..."
+    mkdir -p /etc/cp/policy
+else
+    echo "Directory /etc/cp/policy already exists."
+fi
+
 # Copy the policy file to the target path
 cp "$POLICY_PATH" "$TARGET_PATH"
 echo "Policy file copied to $TARGET_PATH."
