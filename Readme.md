@@ -53,3 +53,5 @@ The project GitHub is available [here](https://github.com/openappsec).
 ## UML Diagram
 ![Open AppSec ](https://github.com/miloskec/openappsec/blob/master/opanappsec.png)
 
+> To ensure traffic is routed through OpenAppSec, direct it to port 8080
+
